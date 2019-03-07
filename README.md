@@ -1,5 +1,5 @@
 # noobcash
-Distributed Systems Blockchain Project 
+Distributed Systems Blockchain Project
 
 
 | Μέλος                       | Α.Μ.          | github user name                                         |
@@ -21,7 +21,7 @@ import modules needed if you do not use Anaconda env
 
 
 
-You can user REST API or just messages via threads or processes for the nodes.
+You can use REST API or just messages via threads or processes for the nodes.
 Install flask using pip install Flask if you choose REST
 
 

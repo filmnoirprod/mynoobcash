@@ -8,7 +8,6 @@ import node
 import blockchain
 import wallet
 import transaction
-import wallet
 
 
 ### JUST A BASIC EXAMPLE OF A REST API WITH FLASK
@@ -35,7 +34,7 @@ def get_transactions():
 
 
 
-# run it once fore every node
+# run it once for every node
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
