@@ -3,13 +3,12 @@ import wallet
 
 class node:
 	def __init__():
-		self.NBC=100;
 		##set
 
 		#self.chain
 		#self.current_id_count
 		#self.NBCs
-		self.wallet
+		#self.wallet
 
 		#slef.ring[]   #here we store information for every node, as its id, its address (ip:port) its public key and its balance
 
@@ -68,6 +67,3 @@ class node:
 
 	def resolve_conflicts(self):
 		#resolve correct chain
-
-
-
