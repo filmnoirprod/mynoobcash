@@ -17,9 +17,10 @@ class Block:
 
 
 	def myHash(self):
+
 		#calculate self.hash
 		sha = hasher.sha256()
-	    sha.update(str(self.index)+
+	  sha.update(str(self.index)+
 				   str(self.previous_hash) +
 	               str(self.timestamp) +
 	               str(self.listOfTransactions) +
@@ -27,5 +28,6 @@ class Block:
 		self.hash = sha.hexdigest()
 
 	def add_transaction(self, transaction):
+
 		#add a transaction to the block
 		self.listOfTransactions.append(transaction)
