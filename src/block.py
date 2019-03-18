@@ -16,13 +16,11 @@ class Block:
 		self.hash
 
 	def myHash(self):
+
 		#calculate self.hash
 		sha = hasher.sha256()
-	    sha.update(str(self.previous_hash) +
-	               str(self.timestamp) +
-	               str(self.listOfTransactions) +
-	               str(self.nonce))
+		sha.update(str(self.previous_hash) + str(self.timestamp) + str(self.listOfTransactions) + str(self.nonce))
 		self.hash = sha.hexdigest()
 
-	def add_transaction(transaction transaction, blockchain blockchain):
+	#def add_transaction(transaction transaction, blockchain blockchain):
 		#add a transaction to the block
