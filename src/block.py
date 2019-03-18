@@ -6,21 +6,28 @@ import hashlib as hasher
 
 
 class Block:
-	def __init__(self, previousHash):
+	def __init__(self, i, previousHash):
 		##set
-
-		self.previousHash = previousHash
+		self.index = i
 		self.timestamp = date.datetime.now()
 		self.listOfTransactions = []
-		self.nonce
+		self.nonce = 0
 		self.hash
+		self.previousHash = previousHash
+
 
 	def myHash(self):
 
 		#calculate self.hash
 		sha = hasher.sha256()
-		sha.update(str(self.previous_hash) + str(self.timestamp) + str(self.listOfTransactions) + str(self.nonce))
+	  sha.update(str(self.index)+
+				   str(self.previous_hash) +
+	               str(self.timestamp) +
+	               str(self.listOfTransactions) +
+	               str(self.nonce))
 		self.hash = sha.hexdigest()
 
-	#def add_transaction(transaction transaction, blockchain blockchain):
+	def add_transaction(self, transaction):
+
 		#add a transaction to the block
+		self.listOfTransactions.append(transaction)
