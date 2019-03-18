@@ -1,12 +1,13 @@
+import sys
 import requests
 import json
 from flask import Flask, jsonify, request, render_template
 from uuid import uuid4
 #from flask_cors import CORS
 
-
+import init
 import block
-import node
+#import node
 import blockchain
 import wallet
 import transaction
@@ -22,11 +23,15 @@ myblockchain = blockchain.Blockchain()
 # Generate a globally unique address for this node
 node_identifier = str(uuid4()).replace('-', '')
 
+mynode=init.node()
+mynode.start(sys.argv[1], int(sys.argv[2]))
+
 #.......................................................................................
 
 
 
 # get all transactions in the blockchain
+
 
 @app.route('/transactions/get', methods=['GET'])
 def get_transactions():
@@ -92,16 +97,14 @@ def full_chain():
 def register_nodes():
     values = request.get_json()
 
-    nodes = values.get('nodes')
-    if nodes is None:
-        return "Error: Please supply a valid list of nodes", 400
+    address = values.get('address')
+    if address is None:
+        return "Error: Please supply a valid address", 400
 
-    for node in nodes:
-        myblockchain.register_node(node)
+    mynode.register_node(address)
 
     response = {
-        'message': 'New nodes have been added',
-        'total_nodes': list(myblockchain.nodes),
+        'message': 'New node has been added to the ring'
     }
     return jsonify(response), 201
 
@@ -127,6 +130,10 @@ def consensus():
 # run it once for every node
 
 if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(sys.argv[3]))
+
+'''
+if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
@@ -134,4 +141,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     port = args.port
 
-    app.run(host='127.0.0.1', port=port)
+    app.run(host='0.0.0.0', port=port)
+'''
