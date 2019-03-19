@@ -1,19 +1,17 @@
 import sys
 import hashlib
 import json
-from time import time
+import time
 from urllib.parse import urlparse
 from uuid import uuid4
 #import wallet
 import block
 import myblockchain
+import copy
 
 import threading
 import requests
 from flask import Flask, jsonify, request
-
-
-
 
 class node:
     def __init__(self, bootstrap, number_of_nodes):
@@ -27,14 +25,14 @@ class node:
             self.chain.create_genesis(self.number_of_nodes, self.ring[0]) # 100 *number_of_nodes from wallet 0
             self.registered_everybody = threading.Event()
             self.registered_everybody.clear()
-            extra_thread = threading.Thread(target = self.init_transactions)
+            extra_thread = threading.Thread(target = self.init_transactions, name="exta")
             extra_thread.start()
         else:
             self.register_self()
 
-
-    def init_transactions(ring):
+    def init_transactions(self):
         self.registered_everybody.wait()
+        time.sleep(2)
         print("yes")
         # wait on a condition
         for i, address in enumerate(self.ring[1:]):
@@ -42,7 +40,7 @@ class node:
         for address in self.ring[1:]:
             continue
             # self.add_transaction(...)
-
+        return self
 
     def send_init_info(self, i, address): # used by bootstrap to send node id and ring
         message = {
@@ -58,6 +56,7 @@ class node:
     def receive_init_info(self, i, ring):
         self.ring = copy.deepcopy(ring)
         self.node_id = i
+        return self
 
     def register_self(self): # used by others to register their self to bootstrap
         message = {
@@ -74,6 +73,7 @@ class node:
         self.current_id_count = self.current_id_count + 1
         if (self.current_id_count == self.number_of_nodes):
             self.registered_everybody.set()
+            print ("GEIA SOY MANOLI")
             # condision is set to true
             """
             print("yes")
