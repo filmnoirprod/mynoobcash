@@ -107,9 +107,9 @@ def register_nodes():
 @app.route('/nodes/register_ack', methods=['POST'])
 def register_ack():
     node_id = request.form['node_id']
-    print(node_id)
-    ring = request.form.getlist['ring']
-    print(ring)
+    print (node_id)
+    ring = request.form.getlist('ring')
+    print (ring)
     if node_id is None:
         return "Error: Please supply a valid node id", 400
     if ring is None:
