@@ -2,29 +2,24 @@ import sys
 import requests
 import json
 from flask import Flask, jsonify, request, render_template
-from uuid import uuid4
+#from uuid import uuid4
 #from flask_cors import CORS
 
-import init
+import node
 import block
-#import node
 import blockchain
-import wallet
+#import wallet
 import transaction
 
 
 ### JUST A BASIC EXAMPLE OF A REST API WITH FLASK
 
-
-
 app = Flask(__name__)
 #CORS(app)
-myblockchain = blockchain.Blockchain()
 # Generate a globally unique address for this node
-node_identifier = str(uuid4()).replace('-', '')
+# node_identifier = str(uuid4()).replace('-', '')
 
-mynode=init.node()
-mynode.start(sys.argv[1], int(sys.argv[2]))
+mynode=node.node(sys.argv[1], int(sys.argv[2]))
 
 #.......................................................................................
 
@@ -95,9 +90,10 @@ def full_chain():
 
 @app.route('/nodes/register', methods=['POST'])
 def register_nodes():
-    values = request.get_json()
-
-    address = values.get('address')
+    #values = request.get_json(force=True)
+    address = request.form['address']
+    print(address)
+    #address = values['address']
     if address is None:
         return "Error: Please supply a valid address", 400
 
@@ -108,6 +104,23 @@ def register_nodes():
     }
     return jsonify(response), 201
 
+@app.route('/nodes/register_ack', methods=['POST'])
+def register_ack():
+    node_id = request.form['node_id']
+    print(node_id)
+    ring = request.form.getlist['ring']
+    print(ring)
+    if node_id is None:
+        return "Error: Please supply a valid node id", 400
+    if ring is None:
+        return "Error: Please supply a valid ring", 400
+
+    mynode.receive_init_info(node_id, ring)
+
+    response = {
+        'message': 'JOB DONE'
+    }
+    return jsonify(response), 201
 
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():

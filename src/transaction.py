@@ -22,10 +22,6 @@ class Transaction:
         #self.transaction_outputs: λίστα από Transaction Output 
         #selfSignature
 
-
-    
-
-
     def to_dict(self):
         return OrderedDict({'sender_address': self.sender_address,
                            'receiver_address': self.receiver_address,

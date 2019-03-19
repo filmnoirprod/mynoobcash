@@ -1,3 +1,5 @@
+# Currently NOT in USE, just don't care
+
 import sys
 import hashlib
 import json
@@ -51,7 +53,7 @@ class node:
             "address" : "http://0.0.0.0:5001"
         }
         r= request.post(self.ring[0] + '/nodes/register', data = message)
-        return self
+        return r
 
 
     def register_node(self, add):

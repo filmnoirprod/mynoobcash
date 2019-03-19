@@ -1,9 +1,10 @@
-import blockchain
+import myblockchain
 from time import time
 import hashlib
 import json
+import copy
 
-
+MINING_DIFFICULTY = 4
 
 class Block:
 	def __init__(self, i, previousHash):
@@ -23,10 +24,20 @@ class Block:
 				'nonce': self.nonce,
 				'previous_hash': self.previousHash}
 		string = json.dumps(block, sort_keys=True).encode()
-		print(string)
-		return hashlib.sha224(string).hexdigest()
-
-	def add_transaction(self, transaction):
-		#add a transaction to the block
-		self.listOfTransactions.append(transaction.to_dict())
+		self.currentHash = hashlib.sha224(string).hexdigest()
+		return self.currentHash
+		
+	def add_transactions_to_block(self, transactions):
+		#add the transactions list to the block when we reach the MAX capacity
+		self.listOfTransactions = copy.deepcopy(transactions)
+		self.myHash()
 		return self
+
+	def proof_of_work(self):
+		while self.valid_proof() is False:
+			self.nonce += 1
+		return self
+
+	def valid_proof(self, difficulty = MINING_DIFFICULTY):
+		guess_hash = self.myHash()
+		return guess_hash[:difficulty] == '0'*difficulty
