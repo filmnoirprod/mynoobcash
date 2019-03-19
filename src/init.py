@@ -1,34 +1,44 @@
+# Currently NOT in USE, just don't care
+
+import sys
 import hashlib
 import json
 from time import time
 from urllib.parse import urlparse
 from uuid import uuid4
+import wallet
+import myblockchain
 
+import threading
 import requests
 from flask import Flask, jsonify, request
 
+NODES = 5
 
 class node:
     def __init__(self):
-        self.node_id
-        self.chain=blockchain()
+        self.chain=myblockchain.Blockchain()
         self.current_id_count = 0
-        self.NBCs = 0
-        self.wallet = wallet()
-        self.ring = ["url"]
+        self.wallet = wallet.wallet()
+        self.ring = ["http://0.0.0.0:5000"]
     
     def start(self, argument, number_of_nodes):
-        if (argument==0):
+        if (argument=="0"):
+            print ("geia sou mano")
             self.node_id = 0
-            self.chain.create_genesis(number_of_nodes, ring[0]) # 100 *number_of_nodes from wallet 0
+            self.chain.create_genesis(number_of_nodes, self.ring[0]) # 100 *number_of_nodes from wallet 0
+            '''
             while (self.current_id_count < number_of_nodes):
                 continue
-            for i, address in enumerate(ring[1:]):
+            for i, address in enumerate(self.ring[1:]):
                 self.send_init_info(i, address)
-            for address in ring[1:]:
-                self.add_transaction(...)
+            for address in self.ring[1:]:
+                continue
+                # self.add_transaction(...)
+            '''
         else:
-            self.register_node()
+            self.register_self()
+        return self
 
     def send_init_info(self, i, address):
         message = {
@@ -36,28 +46,23 @@ class node:
             "ring": self.ring
         }
         r = requests.post(address + '/nodes/register_ack', data = message)
+        return self
+
+    def register_self(self):
+        message = {
+            "address" : "http://0.0.0.0:5001"
+        }
+        r= request.post(self.ring[0] + '/nodes/register', data = message)
+        return r
 
 
-
-    @app.route('/nodes/register', methods=['POST'])
-    def register_nodes():
-        if (self.node_id==0):
-            values = request.get_json()
-
-            node = values.get('node')
-            if node is None:
-                return "Error: Please supply a valid node", 400
-
-            self.ring.append(node)
-            self.current_id_count = self.current_id_count + 1
-
-            response = {
-                'message': 'New node has been added'
-            }
-            return jsonify(response), 201
-
-
-
-if __name__ == '__main__':
-    mynode=node()
-    mynode.start(argument, number_of_nodes)
+    def register_node(self, add):
+        print ("alyziaki bravo")
+        self.ring.append(add)
+        self.current_id_count = self.current_id_count + 1
+        if (self.current_id_count==NODES):
+            for i, address in enumerate(self.ring[1:]):
+                self.send_init_info(i, address)
+            for address in self.ring[1:]:
+                continue
+                # self.add_transaction(...)
