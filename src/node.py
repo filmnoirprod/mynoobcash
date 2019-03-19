@@ -8,8 +8,10 @@ from uuid import uuid4
 import block
 import myblockchain
 
+import threading
 import requests
 from flask import Flask, jsonify, request
+
 
 
 
@@ -22,9 +24,25 @@ class node:
         self.ring = ["http://0.0.0.0:5000"]
         if (bootstrap == "0"):
             self.node_id = 0
-            self.chain.create_genesis(self.number_of_nodes, self.ring[0]) # 100 *number_of_nodes from wallet 0   
+            self.chain.create_genesis(self.number_of_nodes, self.ring[0]) # 100 *number_of_nodes from wallet 0
+            self.registered_everybody = threading.Event()
+            self.registered_everybody.clear()
+            extra_thread = threading.Thread(target = self.init_transactions)
+            extra_thread.start()
         else:
-            self.register_self()    
+            self.register_self()
+
+
+    def init_transactions(ring):
+        self.registered_everybody.wait()
+        print("yes")
+        # wait on a condition
+        for i, address in enumerate(self.ring[1:]):
+            self.send_init_info(i+1, address)
+        for address in self.ring[1:]:
+            continue
+            # self.add_transaction(...)
+
 
     def send_init_info(self, i, address): # used by bootstrap to send node id and ring
         message = {
@@ -33,10 +51,10 @@ class node:
         }
         print (message)
         r = requests.post(address + '/nodes/register_ack', data = message)
-        
+
         print (r)
         return self
-    
+
     def receive_init_info(self, i, ring):
         self.ring = copy.deepcopy(ring)
         self.node_id = i
@@ -55,12 +73,16 @@ class node:
         self.ring.append(address)
         self.current_id_count = self.current_id_count + 1
         if (self.current_id_count == self.number_of_nodes):
+            self.registered_everybody.set()
+            # condision is set to true
+            """
             print("yes")
             for i, address in enumerate(self.ring[1:]):
                 self.send_init_info(i+1, address)
             for address in self.ring[1:]:
                 continue
                 # self.add_transaction(...)
+            """
 
     def create_new_block():
         print(1)
