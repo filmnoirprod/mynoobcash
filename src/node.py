@@ -27,7 +27,7 @@ class node:
             first = tr.Transaction("0", "0", self.ring[0], 100*number_of_nodes, [], 100*number_of_nodes) # 100 *number_of_nodes from wallet 0
             first = first.to_dict()
             self.wallet.add_genesis(first)
-            self.chain.create_genesis(first) 
+            self.chain.create_genesis(first)
             self.registered_everybody = threading.Event()
             self.registered_everybody.clear()
             extra_thread = threading.Thread(target = self.init_transactions, name="exta")
@@ -42,6 +42,10 @@ class node:
         # wait on a condition
         for i, address in enumerate(self.ring[1:]):
             self.send_init_info(i+1, address)
+
+        # send addresses to blockchain
+        self.chain.add_ring_and_id(self.ring, self.node_id)
+
         for address in self.ring[1:]:
             continue
             # self.add_transaction(...)
@@ -61,6 +65,10 @@ class node:
     def receive_init_info(self, i, ring):
         self.ring = copy.deepcopy(ring)
         self.node_id = i
+
+        # send addresses to blockchain
+        self.chain.add_ring_and_id(self.ring, self.node_id)
+
         return self
 
     def register_self(self): # used by others to register their self to bootstrap

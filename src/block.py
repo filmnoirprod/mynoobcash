@@ -4,6 +4,7 @@ import hashlib
 import json
 import copy
 from collections import OrderedDict
+import threading
 
 MINING_DIFFICULTY = 4
 
@@ -27,16 +28,17 @@ class Block:
 		string = json.dumps(block, sort_keys=True).encode()
 		self.currentHash = hashlib.sha224(string).hexdigest()
 		return self.currentHash
-		
+
 	def add_transactions_to_block(self, transactions):
 		#add the transactions list to the block when we reach the MAX capacity
 		self.listOfTransactions = copy.deepcopy(transactions)
 		self.myHash()
 		return self
 
-	def proof_of_work(self):
-		while self.valid_proof() is False:
+	def proof_of_work(self,e):
+		while self.valid_proof() is False and not e.isSet():
 			self.nonce += 1
+		if(not e.isSet()): self.chain.append(new_block)
 		return self
 
 	def valid_proof(self, difficulty = MINING_DIFFICULTY):
