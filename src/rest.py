@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, render_template
 import node
 import block
 import blockchain
-#import wallet
+import wallet
 import transaction
 
 
@@ -82,8 +82,7 @@ def new_transaction():
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
-        'chain': myblockchain.chain,
-        'length': len(myblockchain.chain),
+        'chain': mynode.chain.output()
     }
     return jsonify(response), 200
 
