@@ -46,8 +46,16 @@ class Block:
 		return guess_hash[:difficulty] == '0'*difficulty
 
 	def output (self):
-		return OrderedDict({'index': self.index,
+		return {'index': self.index,
 				'timestamp': self.timestamp,
 				'transactions': self.listOfTransactions,
 				'nonce': self.nonce,
-				'previous_hash': self.previousHash})
+				'previous_hash': self.previousHash}
+
+	def input (self, orderedInfo):
+		self.index = orderedInfo['index']
+		self.timestamp = orderedInfo['timestamp']
+		self.listOfTransactions = orderedInfo['transactions']
+		self.nonce = orderedInfo['nonce']
+		self.previousHash = orderedInfo['previous_hash']
+

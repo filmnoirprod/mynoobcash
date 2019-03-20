@@ -105,16 +105,19 @@ def register_nodes():
 
 @app.route('/nodes/register_ack', methods=['POST'])
 def register_ack():
-    node_id = request.form['node_id']
+    data = request.get_json()
+    node_id = data['node_id']
     print (node_id)
-    ring = request.form.getlist('ring')
+    ring = data['ring']
     print (ring)
+    genesis = data['genesis']
+    print(genesis)
     if node_id is None:
         return "Error: Please supply a valid node id", 400
     if ring is None:
         return "Error: Please supply a valid ring", 400
 
-    mynode.receive_init_info(node_id, ring)
+    mynode.receive_init_info(node_id, ring, genesis )
 
     response = {
         'message': 'JOB DONE'

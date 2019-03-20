@@ -53,6 +53,7 @@ class Blockchain:
                     print (r)
         return self
 
+
     def output (self):
         outlist = []
         for bl in self.chain:
