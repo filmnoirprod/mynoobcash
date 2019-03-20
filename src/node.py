@@ -50,17 +50,22 @@ class node:
     def send_init_info(self, i, address): # used by bootstrap to send node id and ring
         message = {
             'node_id': i,
-            'ring': self.ring
+            'ring': self.ring,
+            'genesis': self.chain.chain[0].output()
         }
-        print (message)
-        r = requests.post(address + '/nodes/register_ack', data = message)
-
+        m = json.dumps(message)
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        r = requests.post(address + '/nodes/register_ack', data = m, headers=headers)
+        #r = flask.Request()
         print (r)
         return self
 
-    def receive_init_info(self, i, ring):
+    def receive_init_info(self, i, ring, genesis):
         self.ring = copy.deepcopy(ring)
         self.node_id = i
+        new = block.Block(0, "1")
+        new.input(genesis)
+        self.chain.chain.append(new)
         return self
 
     def register_self(self): # used by others to register their self to bootstrap

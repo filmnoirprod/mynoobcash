@@ -23,6 +23,7 @@ class Blockchain:
             self.current_transactions = []
             new_block.proof_of_work()   # an kano ego to mine
             self.chain.append(new_block)
+    
 
     def output (self):
         outlist = []
