@@ -27,7 +27,7 @@ class Blockchain:
 
     def add_transaction (self, transaction): # transaction as dict
         self.current_transactions.append(transaction)
-        if (len(current_transactions)==CAPACITY):
+        if (len(current_transactions) == CAPACITY):
             new_block = block.Block(self.chain[-1].index + 1, self.chain[-1].currentHash)
             new_block.add_transactions_to_block(self.current_transactions)
             self.current_transactions = []
@@ -45,11 +45,11 @@ class Blockchain:
             for i, address in enumerate(self.ring):
                 if (i != self.node_id):
                     message = {
-                        'blockchain': self.chain
+                        'blockchain': self.chain.output()
                     }
                     jsonify(message)
                     print (message)
-                    r = requests.post(address + '/no', data = message)
+                    r = requests.post(address + '/nodes/mined_block', data = message)
                     print (r)
         return self
 
