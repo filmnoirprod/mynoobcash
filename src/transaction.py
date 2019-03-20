@@ -1,6 +1,8 @@
 from collections import OrderedDict
 
 import binascii
+import json
+import hashlib
 
 import Crypto
 import Crypto.Random

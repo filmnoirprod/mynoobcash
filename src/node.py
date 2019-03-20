@@ -10,6 +10,7 @@ import transaction as tr
 import myblockchain
 import copy
 
+import wallet
 import threading
 import requests
 from flask import Flask, jsonify, request
@@ -23,7 +24,7 @@ class node:
         self.ring = ["http://0.0.0.0:5000"]
         if (bootstrap == "0"):
             self.node_id = 0
-            first = tr.Transaction("0", "0", self.ring[0], 100*number_of_nodes, [], 0) # 100 *number_of_nodes from wallet 0
+            first = tr.Transaction("0", "0", self.ring[0], 100*number_of_nodes, [], 100*number_of_nodes) # 100 *number_of_nodes from wallet 0
             first = first.to_dict()
             self.wallet.add_genesis(first)
             self.chain.create_genesis(first) 

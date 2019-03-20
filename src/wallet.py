@@ -17,41 +17,37 @@ class wallet:
 
     def __init__(self):
         ##set
-        self.private_key = self.priv_key()
-        self.public_key = self.pubc_key()
+        self.private_key, self.public_key = self.keys()
         self.address = self.public_key
         self.transactions = {}
 
-	def input_transactions(self, value):
-		sum = 0
-		list_of_input = []
-		for i in self.transactions.keys():
-			sum += self.transactions[i]
-			list_of_input.append(i)
-			if sum >= value:
-				break
-		if sum < value:	# den iparxoun arketa lefta telika
-			list_of_input = [] 
-		else:
-			for i in list_of_input:
-				del self.transactions[i]
-		return list_of_input, sum
+    def input_transactions(self, value):
+        sum = 0
+        list_of_input = []
+        for i in self.transactions.keys():
+            sum += self.transactions[i]
+            list_of_input.append(i)
+            if sum >= value:
+                break
+        if sum < value:	# den iparxoun arketa lefta telika
+            list_of_input = [] 
+        else:
+            for i in list_of_input:
+                del self.transactions[i]
+        return list_of_input, sum
 
 
     def mybalance(self):
-		sum = 0
-		for i in self.transactions:
-			sum += i['value']
-		return sum
+        sum = 0
+        for i in self.transactions:
+            sum += i['value']
+        return sum
 
-    def priv_key(self):
+    def keys(self):
         random_gen = Crypto.Random.new().read
         priv = RSA.generate(1024, random_gen)
-        return  binascii.hexlify(priv.exportKey(format='DER')).decode('ascii')
+        pub = priv.publickey()
+        return  binascii.hexlify(priv.exportKey(format='DER')).decode('ascii'), binascii.hexlify(pub.exportKey(format='DER')).decode('ascii')
 
-    def pubc_key(self):
-        pub = self.private_key.publickey()
-        return binascii.hexlify(pub.exportKey(format='DER')).decode('ascii')
-
-	def add_genesis(self, transaction):
-		self.transactions[transaction['transaction_id']] = transaction
+    def add_genesis(self, transaction):
+        self.transactions[transaction['transaction_id']] = transaction

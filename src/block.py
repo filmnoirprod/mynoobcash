@@ -3,6 +3,7 @@ from time import time
 import hashlib
 import json
 import copy
+from collections import OrderedDict
 
 MINING_DIFFICULTY = 4
 
@@ -41,3 +42,10 @@ class Block:
 	def valid_proof(self, difficulty = MINING_DIFFICULTY):
 		guess_hash = self.myHash()
 		return guess_hash[:difficulty] == '0'*difficulty
+
+	def output (self):
+		return OrderedDict({'index': self.index,
+				'timestamp': self.timestamp,
+				'transactions': self.listOfTransactions,
+				'nonce': self.nonce,
+				'previous_hash': self.previousHash})

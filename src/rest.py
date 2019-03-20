@@ -82,8 +82,7 @@ def new_transaction():
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
-        'chain': mynode.chain,
-        'length': len(mynode.chain),
+        'chain': mynode.chain.output()
     }
     return jsonify(response), 200
 
