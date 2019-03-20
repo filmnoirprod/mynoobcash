@@ -78,6 +78,19 @@ def new_transaction():
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
 
+@app.route('/nodes/mined_block', methods=['POST'])
+def node_found():
+    values = request.get_json()
+    blockchain = values['blockchain']
+    print(blockchain)
+    mynode.chain.e.set()
+
+    # check if better
+    response = {
+        'message': 'JOB DONE'
+    }
+    return jsonify(response), 201
+
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
