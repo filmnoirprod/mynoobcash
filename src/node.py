@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 #import wallet
 import block
+import transaction as tr
 import myblockchain
 import copy
 
@@ -18,11 +19,14 @@ class node:
         self.number_of_nodes = number_of_nodes
         self.chain=myblockchain.Blockchain()
         self.current_id_count = 0
-        #self.wallet = wallet.wallet()
+        self.wallet = wallet.wallet()
         self.ring = ["http://0.0.0.0:5000"]
         if (bootstrap == "0"):
             self.node_id = 0
-            self.chain.create_genesis(self.number_of_nodes, self.ring[0]) # 100 *number_of_nodes from wallet 0
+            first = tr.Transaction("0", "0", self.ring[0], 100*number_of_nodes, [], 0) # 100 *number_of_nodes from wallet 0
+            first = first.to_dict()
+            self.wallet.add_genesis(first)
+            self.chain.create_genesis(first) 
             self.registered_everybody = threading.Event()
             self.registered_everybody.clear()
             extra_thread = threading.Thread(target = self.init_transactions, name="exta")
@@ -88,8 +92,15 @@ class node:
         print(1)
 
 
-    def create_transaction(sender, receiver, signature):
-    #remember to broadcast it
+    def create_transaction(self, value, receiver, signature):
+        list_of_input, sum = self.wallet.input_transactions(value)
+        if (list_of_input == []):
+            return "Out of money"
+        else:
+            mytransaction = tr.Transaction(self.myaddress, self.wallet.private_key, receiver, value, list_of_input, sum)
+            mytransaction = mytransaction.sign_transaction()
+            self.chain.add_transaction(mytransaction.to_dict())
+        #remember to broadcast it
         print(1)
 
 
@@ -120,9 +131,9 @@ class node:
 
 
     #def valid_proof(.., difficulty=MINING_DIFFICULTY):
-      #	print(1)
+    #    print(1)
 
-        #concencus functions
+    #concencus functions
 
     def valid_chain(self, chain):
         #check for the longer chain accroose all nodes

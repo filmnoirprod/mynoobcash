@@ -8,9 +8,8 @@ class Blockchain:
         self.current_transactions = []
         self.chain = []
 
-    def create_genesis (self, number_of_nodes, recipient_address):
-        first = tr.Transaction("0", "0", recipient_address, 100*number_of_nodes)
-        self.current_transactions.append(first.to_dict())
+    def create_genesis (self, first):
+        self.current_transactions.append(first)
         genesis_block=block.Block(0, "1")
         genesis_block.add_transactions_to_block(self.current_transactions)
         self.current_transactions = []
