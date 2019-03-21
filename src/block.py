@@ -38,7 +38,6 @@ class Block:
 	def proof_of_work(self,e):
 		while self.valid_proof() is False and not e.isSet():
 			self.nonce += 1
-		if(not e.isSet()): self.chain.append(new_block)
 		return self
 
 	def valid_proof(self, difficulty = MINING_DIFFICULTY):
