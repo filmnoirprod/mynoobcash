@@ -19,7 +19,7 @@ app = Flask(__name__)
 # Generate a globally unique address for this node
 # node_identifier = str(uuid4()).replace('-', '')
 
-mynode=node.node(sys.argv[1], int(sys.argv[2]))
+mynode=node.node(sys.argv[1], int(sys.argv[2]), sys.argv[3])
 
 #.......................................................................................
 
@@ -65,18 +65,22 @@ def mine():
 
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
-    values = request.get_json()
+    data = request.get_json()
+    sender = data['sender_adress']
+    receiver = data['receiver']
+    value = data['value']
+    myid = data['myid']
+    in_list = data['inputs']
+    out_list = data['outputs']
+    sign = data['sign']
+    
+    # add 
 
-    # Check that the required fields are in the POST'ed data
-    required = ['sender', 'recipient', 'amount']
-    if not all(k in values for k in required):
-        return 'Missing values', 400
+    mynode.receive_trans(sender,receiver,value,myid,in_list,out_list,sign)
+    
+    response = {'message': 'ok'}
+    return jsonify(response), 200
 
-    # Create a new Transaction
-    index = myblockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
-
-    response = {'message': f'Transaction will be added to Block {index}'}
-    return jsonify(response), 201
 
 @app.route('/nodes/mined_block', methods=['POST'])
 def node_found():
@@ -84,6 +88,9 @@ def node_found():
     blockchain = values['blockchain']
     print(blockchain)
     mynode.chain.e.set()
+
+    # blockchain from JSON to list of blocks
+    # compare with mynode.chain and resolve
 
     # check if better
     response = {
@@ -104,12 +111,13 @@ def full_chain():
 def register_nodes():
     #values = request.get_json(force=True)
     address = request.form['address']
+    key = request.form['public_key']
     print(address)
     #address = values['address']
     if address is None:
         return "Error: Please supply a valid address", 400
 
-    mynode.register_node(address)
+    mynode.register_node(address, key)
 
     response = {
         'message': 'New node has been added to the ring'
@@ -125,12 +133,13 @@ def register_ack():
     print (ring)
     genesis = data['genesis']
     print(genesis)
+    public_key_list = data['public_key_list']
     if node_id is None:
         return "Error: Please supply a valid node id", 400
     if ring is None:
         return "Error: Please supply a valid ring", 400
 
-    mynode.receive_init_info(node_id, ring, genesis )
+    mynode.receive_init_info(node_id, ring, public_key_list, genesis )
 
     response = {
         'message': 'JOB DONE'

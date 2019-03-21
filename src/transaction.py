@@ -60,3 +60,4 @@ class Transaction:
 
         #h = SHA.new(str(self.to_dict()).encode('utf8'))
         #return binascii.hexlify(signer.sign(h)).decode('ascii')
+        

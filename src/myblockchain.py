@@ -13,10 +13,13 @@ class Blockchain:
         self.chain = []
         self.ring = []
         self.node_id = 0
+        self.public_key_list = []
+        self.e = threading.Event()
 
-    def add_ring_and_id(self, ring, id):
+    def add_ring_and_id(self, ring, id, keys):
         self.ring = copy.deepcopy(ring)
         self.node_id = id
+        self.public_key_list = copy.deepcopy(keys)
 
     def create_genesis (self, first):
         self.current_transactions.append(first)
@@ -27,13 +30,12 @@ class Blockchain:
 
     def add_transaction (self, transaction): # transaction as dict
         self.current_transactions.append(transaction)
-        if (len(current_transactions) == CAPACITY):
+        if (len(self.current_transactions) == CAPACITY):
             new_block = block.Block(self.chain[-1].index + 1, self.chain[-1].currentHash)
             new_block.add_transactions_to_block(self.current_transactions)
             self.current_transactions = []
-            self.e = threading.Event()
             self.e.clear()
-            extra_thread = threading.Thread(target = dummy , name = 'miner', args = (new_block, ))    # an kano ego to mine
+            extra_thread = threading.Thread(target = self.dummy , name = 'miner', args = (new_block, ))    # an kano ego to mine
             #if(not self.e.isSet()) self.chain.append(new_block)
 
     def dummy(self, new_block):
