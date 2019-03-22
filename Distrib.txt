@@ -1,5 +1,7 @@
-nKFSC9c84T		83.212.98.219	Node1
-FMjglN4lqz		Node2
-ewKU20l7vJ		Node3
-vhEy1xkAEg		Node4
-1dIg406Mvh		Node5
+Password        	SSH commands                                            Status          Local IP(192.168.0.0/24)
+
+motherhackers 		ssh user@83.212.98.219	                (Node1)         READY           192.168.0.5
+motherhackers		  ssh user@snf-865115.vm.okeanos.grnet.gr (Node2)         READY           192.168.0.3
+motherhackers		  ssh user@snf-865122.vm.okeanos.grnet.gr (Node3)         READY           192.168.0.2
+motherhackers		  ssh user@snf-863546.vm.okeanos.grnet.gr (Node4)         READY           192.168.0.6
+motherhackers		  ssh user@snf-863547.vm.okeanos.grnet.gr (Node5)         READY           192.168.0.4
