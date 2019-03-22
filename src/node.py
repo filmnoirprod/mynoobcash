@@ -1,169 +1,216 @@
-import sys
-import hashlib
+import block
+import wallet
 import json
+import requests
+import blockchain
+import threading
+import transaction
+
+import binascii
+import Crypto
+import Crypto.Random
+from Crypto.Hash import SHA
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+
+import sys
+import threading
 import time
 from urllib.parse import urlparse
 from uuid import uuid4
-#import wallet
-import block
-import transaction as tr
-import myblockchain
 import copy
-
-import wallet
-import threading
-import requests
 from flask import Flask, jsonify, request
 
-class node:
-    def __init__(self, bootstrap, number_of_nodes, port):
-        self.number_of_nodes = number_of_nodes
-        self.chain=myblockchain.Blockchain()
-        self.current_id_count = 0
+no_mine = threading.Event()
+no_mine.set()
+
+class node():
+    def __init__(self, bootstrap, number,port):
+        self.port=port
+        self.chain = blockchain.Blockchain()
+        self.current_id_count = 0 
         self.wallet = wallet.wallet()
         self.ring = ["http://0.0.0.0:5000"]
+        self.nei = number
         self.public_key_list = []
-        self.port = port
-        if (bootstrap == "0"):
-            self.node_id = 0
+
+        if(bootstrap == "0"):
             self.public_key_list = [self.wallet.public_key]
-            first = tr.Transaction("0", "0", self.ring[0], 100*number_of_nodes, [], 100*number_of_nodes) # 100 *number_of_nodes from wallet 0
-            first = first.to_dict()
-            self.wallet.add_genesis(first)
-            # MALAKA add first to wallet dictionary
-            self.chain.create_genesis(first)
-            self.registered_everybody = threading.Event()
-            self.registered_everybody.clear()
-            extra_thread = threading.Thread(target = self.init_transactions, name="exta")
-            extra_thread.start()
+            self.id = 0
+            self.chain.create_genesis(number, self.wallet.public_key)
+            self.wallet.add_genesis(self.chain.list[0].output())
+            self.e = threading.Event()
+            self.e.clear()
+            t2 = threading.Thread( target = self.init)
+            t2.start()
         else:
-            self.register_self()
+            self.my_reg()
 
-    def init_transactions(self):
-        self.registered_everybody.wait()
-        time.sleep(2)
-        print("yes")
-        # wait on a condition
-        self.wallet_dictionary = {}
-        for key in self.public_key_list:
-            self.wallet_dictionary[key] = []
-        for i, address in enumerate(self.ring[1:]):
-            self.send_init_info(i+1, address)
+    def init(self):
+        self.e.wait()
+        time.sleep(3)
+        for i, a in enumerate(self.ring[1:]):
+        	self.send(i+1, a)
+        time.sleep(3)
+        self.chain.get_addresses(self.ring, self.id)
+        for i, a in enumerate(self.ring[1:]):
+            self.wallet_dict={}
+            for public_key in self.public_key_list:
+                self.wallet_dict[public_key] = []
+            if not no_mine.isSet():
+                no_mine.wait()
+            self.send_trans(i+1, a,self.public_key_list[i+1])
 
-        # send addresses to blockchain
-        self.chain.add_ring_and_id(self.ring, self.node_id, self.public_key_list)
-
-        for address in self.ring[1:]:
-            continue
-            # create ...
-            # self.add_transaction(...)
-            # peirazoume to wallet_dictionary
+    def send_trans(self,i, a,receiver_address):
+        print("sending transaction to each node")
+        self.create_transaction(self.public_key_list[0],receiver_address,100)
+        print("my balance father", self.wallet.mybalance())
         return self
 
-    def send_init_info(self, i, address): # used by bootstrap to send node id and ring
-        message = {
-            'node_id': i,
-            'ring': self.ring,
-            'public_key_list': self.public_key_list,
-            'genesis': self.chain.chain[0].output()
-        }
+    def send(self,i, a):
+        print("sending info to each node")
+        message = {'id': i, 'ring': self.ring,'public_key_list':self.public_key_list,'genesis':self.chain.list[0].output()}
         m = json.dumps(message)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(address + '/nodes/register_ack', data = m, headers=headers)
-        #r = flask.Request()
-        print (r)
+        res=requests.post(a + '/nodes/register', data = m,headers = headers)
+        print(res)
         return self
 
-    def receive_init_info(self, i, ring, public_key_list, genesis):
+    def recieve(self, i, ring,keys,genesis):
+        print("receiving info!")
         self.ring = copy.deepcopy(ring)
-        self.public_key_list = copy.deepcopy(public_key_list)
-        self.wallet_dictionary = {}
-        for key in public_key_list:
-            self.wallet_dictionary[key] = []
-        self.node_id = i
-        new = block.Block(0, "1")
-        new.input(genesis)
-        self.chain.chain.append(new)
-        # send addresses to blockchain
-        self.chain.add_ring_and_id(self.ring, self.node_id, self.public_key_list)
+        self.id = i
+        self.chain.get_addresses(self.ring, self.id)
+        self.public_key_list = copy.deepcopy(keys)
+        self.wallet_dict={}
+        for public_key in self.public_key_list:
+            self.wallet_dict[public_key] = []
+        new = block.Block(genesis['index'], genesis['nonce'], genesis['previous_hash'])
+        new.timestamp = genesis['timestamp']
+        new.listOfTransactions = genesis['transactions']
+        new.myHash()
+        self.chain.list.append(new)
+        mylist = new.listOfTransactions
+        tr = mylist[0]
+        print("transaction" , tr)
+        t1 = {'myid': tr['transaction_id'], 'value' : tr['value'] , 'receiver' : tr['receiver_address']}
+        self.wallet_dict[self.public_key_list[0]].append(t1)
         return self
 
-    def register_self(self): # used by others to register their self to bootstrap
-        message = {
-            'address' : "http://0.0.0.0:" + self.port,
-            'public_key' : self.wallet.public_key
-        }
-        print(self.ring[0] + "/nodes/register")
-        r = requests.post(self.ring[0] + "/nodes/register", data = message)
-        print(message)
-        print(r)
-        return r
+    def my_reg(self):
+    	message = {'address' : "http://0.0.0.0:"+self.port ,'public_key':self.wallet.public_key}
+    	r = requests.post(self.ring[0]+"/nodes/reg_dad", data = message)
+    	return r
 
-    def register_node(self, address, key): # used by boostrap to handle incoming registers
-        self.ring.append(address)
-        self.public_key_list.append(key)
+    def reg_a_node(self,a,mykey):
+        self.ring.append(a)
+        self.public_key_list.append(mykey)
         self.current_id_count = self.current_id_count + 1
-        if (self.current_id_count == self.number_of_nodes):
-            self.registered_everybody.set()
-            # condision is set to true
+        if(self.current_id_count == self.nei):
+            self.e.set()
 
-    def create_new_block(): # vlepe blockchain
-        print(1)
+    def create_transaction(self, sender, receiver, amount):
+        lista = self.wallet.transactions
+        my_sum = 0
+        utxo = []
+        ids = []
+        for i in range(0, len(lista)):
+            my_sum = my_sum + lista[i]['value']
+            utxo.append(lista[i]['myid'])
+            ids.append(i)
+            if(my_sum >=amount):
+                break
+        if(my_sum < amount):
+            print("not enough nbc")
+            return
+        for i in ids:
+            lista.remove(lista[i])
+
+        new = transaction.Transaction(sender, self.wallet.private_key, receiver, amount,copy.deepcopy(utxo))
+        t1 = {'myid': new.transaction_id, 'value' : amount , 'receiver' : receiver}
+        new.transaction_outputs = [t1]
+
+        if(my_sum>amount):
+            t2 = {'myid': new.transaction_id, 'value' : my_sum - amount , 'receiver' : sender}
+            new.transaction_outputs.append(t2)
+            lista.append(t2)
+
+        self.wallet.transactions = copy.deepcopy(lista)
+        self.wallet_dict[receiver].append(new.transaction_outputs[0])
+        self.wallet_dict[sender] = copy.deepcopy(lista)
+        new.Signature = new.sign_transaction(self.wallet.private_key)
+        self.broadcast_transaction(new)
+        self.chain.add_transaction(new)
+
+    def receive_trans(self,sender,receiver,value,myid,in_list,out_list,sign):
+        new=transaction.Transaction(sender,"0" , receiver, value,in_list)
+        new.transaction_outputs = out_list
+        new.Signature = sign
+        new.transaction_id=myid
+        if self.validate_transaction(new,sender,sign):
+            self.chain.add_transaction(new)
+            mylist = self.wallet_dict[sender]
+            for input_trans in new.transaction_inputs:
+                for index,utxoid in enumerate(mylist):
+                    if( input_trans==utxoid['myid']):
+                        mylist.remove(mylist[index])
+
+            self.wallet_dict[sender] = copy.deepcopy(mylist)
+            self.wallet_dict[receiver].append(new.transaction_outputs[0])
+            if(len(new.transaction_outputs)==2):
+                self.wallet_dict[sender].append(new.transaction_outputs[1])
+
+            if(receiver == self.wallet.public_key):
+                self.wallet.transactions.append(new.transaction_outputs[0])
+            print("my balance kid", self.wallet.mybalance())
+        print(self.wallet.transactions)
+        return
+
+    def validate_transaction(self, trans,sender,sign):
+        print("Validating Transaction...")
+        utxos = self.wallet_dict[sender]
+        cnt=0
+        for input_trans in trans.transaction_inputs:
+            for utxoid in utxos:
+                if  input_trans==utxoid['myid']:
+                    cnt+=1
+
+        if cnt==len(trans.transaction_inputs) and self.verify_transaction_signature(sender,sign,trans):
+            print("Transaction validated")
+            return True
+
+        return False
 
 
-    def create_transaction(self, value, receiver, signature):
-        list_of_input, sum = self.wallet.input_transactions(value)
-        if (list_of_input == []):
-            return "Out of money"
+    def verify_transaction_signature(self, sender_address, signature, transaction):
+        public_key = RSA.importKey(binascii.unhexlify(sender_address))
+        verifier = PKCS1_v1_5.new(public_key)
+        temp = transaction.to_dict_nosign()
+        h = SHA.new(str(temp).encode('utf8'))
+        print("verify_transaction_signature ",verifier.verify(h, binascii.unhexlify(signature)))
+        return verifier.verify(h, binascii.unhexlify(signature))
+
+
+    def broadcast_transaction(self,trans):
+        print("Broadcast_transaction to all except me")
+        message = { 'sender':trans.sender_address, 'receiver' : trans.receiver_address, 'value': trans.value, 'myid': trans.transaction_id, 'inputs':trans.transaction_inputs, 'outputs':trans.transaction_outputs, 'sign': trans.Signature}
+        m = json.dumps(message)
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        for rin in self.ring:
+            if not(rin == self.ring[self.id]):
+                requests.post(rin+"/transactions/new", data = m , headers=headers)
+        return
+
+    def verify_and_add_block(self, orderedInfoBlock):
+        if not orderedInfoBlock['previous_hash'] == self.chain.list[-1].hash:
+            return False
         else:
-            mytransaction = tr.Transaction(self.wallet.public_key , self.wallet.private_key, receiver, value, list_of_input, sum)
-            if mytransaction.transaction_outputs[1]['value'] != 0 :
-                self.wallet.transactions.append(mytransaction.transaction_outputs[1])
-            mytransaction = mytransaction.sign_transaction()
-            self.chain.add_transaction(mytransaction.to_dict())
-            self.broadcast_transaction(mytransaction)
-
-    def receive_trans(sender,receiver,value,myid,in_list,out_list,sign):
-        new_tr = tr.Transaction(sender, "0", receiver, value, in_list)
-        new_tr.transaction_outputs = out_list
-
-
-    def broadcast_transaction():
-        print(1)
-
-
-    def validdate_transaction():
-    #use of signature and NBCs balance
-        print(1)
-
-
-    def add_transaction_to_block():
-    #if enough transactions  mine
-        print(1)
-
-
-
-    def mine_block():
-        print(1)
-
-
-
-    def broadcast_block():
-        print(1)
-
-
-
-
-    #def valid_proof(.., difficulty=MINING_DIFFICULTY):
-    #    print(1)
-
-    #concencus functions
-
-    def valid_chain(self, chain):
-        #check for the longer chain accroose all nodes
-        print(1)
-
-
-    def resolve_conflicts(self):
-        #resolve correct chain
-        print(1)
+            new = block.Block(orderedInfoBlock['index'], orderedInfoBlock['nonce'], orderedInfoBlock['previous_hash'])
+            new.timestamp = orderedInfoBlock['timestamp']
+            new.listOfTransactions = orderedInfoBlock['transactions']
+            if new.verify_hash(orderedInfoBlock['current_hash']):
+                self.chain.e.set()
+                self.chain.list.append(new)
+                return True
+            else:
+                return False

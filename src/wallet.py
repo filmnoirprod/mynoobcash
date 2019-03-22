@@ -16,38 +16,27 @@ from uuid import uuid4
 class wallet:
 
     def __init__(self):
-        ##set
-        self.private_key, self.public_key = self.keys()
+        self.private_key, self.public_key = self.create_keys()
         self.address = self.public_key
         self.transactions = []
 
-    def input_transactions(self, value):
-        sum = 0
-        list_of_input = []
-        for tr in self.transactions:
-            sum += tr['value']
-            list_of_input.append(tr)
-            if sum >= value:
-                break
-        if sum < value:	# den iparxoun arketa lefta telika
-            list_of_input = [] 
-        else:
-            for i in list_of_input:
-                self.transactions.remove(i)
-        return list_of_input, sum
-
-
     def mybalance(self):
-        sum = 0
-        for tr in self.transactions:
-            sum += tr['value']
-        return sum
+    	s = 0
+    	for tr in self.transactions:
+    		s = s + tr['value']
+    	return s
 
-    def keys(self):
+    def create_keys(self):
         random_gen = Crypto.Random.new().read
         priv = RSA.generate(1024, random_gen)
         pub = priv.publickey()
-        return  binascii.hexlify(priv.exportKey(format='DER')).decode('ascii'), binascii.hexlify(pub.exportKey(format='DER')).decode('ascii')
+        return binascii.hexlify(priv.exportKey(format='DER')).decode('ascii'), binascii.hexlify(pub.exportKey(format='DER')).decode('ascii')
 
-    def add_genesis(self, transaction):
-        self.transactions.append(transaction)
+    def add_genesis(self,dict):
+        trlist = dict['transactions']
+        trans = {'myid': trlist[0]['transaction_id'], 
+              'value' : trlist[0]['value'] , 
+              'receiver' : trlist[0]['receiver_address']
+              }
+        self.transactions.append(trans)
+        return self
